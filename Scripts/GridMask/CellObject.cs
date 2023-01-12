@@ -8,29 +8,34 @@ namespace GridMask
         readonly public static int ALIGN_CELL_START = 0, ALIGN_CELL_CENTER = 1, ALIGN_CELL_END = 2;
         readonly public Vector3 CELL_SIZE, POSITION_END, POSITION_START;
 
-        readonly private List<Prop> propList;
-
         public CellObject(Vector3 startPosition, Vector3 cellSize)
         {
             this.POSITION_START = startPosition;
             this.CELL_SIZE = cellSize;
             this.POSITION_END = startPosition + cellSize;
-            this.propList = new List<Prop>();
+            this.IsEmpty = true;
         }
 
         public void Clear()
         {
-            this.propList.Clear();
+            this.IsEmpty = true;
         }
 
-        public List<Prop> GetPropList => this.propList;
+        public bool IsEmpty { get; private set; }
 
-        public bool IsEmpty => this.propList.Count < 1;
-
-        public bool IsEnclosing(Vector3 vector3)
+        public bool IsEnclosing(PropObject propObject)
         {
-            return (this.POSITION_START.x <= vector3.x && this.POSITION_START.z <= vector3.z && this.POSITION_END.x >= vector3.x && this.POSITION_END.z >= vector3.z);
+            Vector3 min, max;
+            min = propObject.BoundsMin;
+            max = propObject.BoundsMax;
+            //check min bounds at cell start position and end position
+            bool minCheck = (this.POSITION_START.x <= min.x && this.POSITION_START.z <= min.z && this.POSITION_END.x >= min.x && this.POSITION_END.z >= min.z);
+            if (minCheck == true) return true;
+            //check max bounds at cell start position and end position
+            return (this.POSITION_START.x <= max.x && this.POSITION_START.z <= max.z && this.POSITION_END.x >= max.x && this.POSITION_END.z >= max.z);
         }
+
+        public Prop PropObj { get; private set; }
 
         public void Put(PropObject propObject, Vector3 offset, int align = 0)
         {
@@ -47,7 +52,8 @@ namespace GridMask
 
         public void Mark(Prop prop)
         {
-            this.propList.Add(prop);
+            this.PropObj = prop;
+            this.IsEmpty = false;
         }
 
     }

@@ -12,8 +12,11 @@ namespace GridMask
 
         readonly private CellObject[,] CELL_OBJECTS;
         readonly private Prop[,] CONTENT;
-        readonly private Vector3 GRID_POSITION_END, GRID_POSITION_START, GRID_SIZE;
         readonly private int ROW_LEN, COLUMN_LEN;
+
+        private float cellWidth, cellLength;
+
+        readonly public Vector3 GRID_POSITION_END, GRID_POSITION_START, GRID_SIZE;
 
         public Vector3 CELL_SIZE { get; private set; }
 
@@ -38,9 +41,9 @@ namespace GridMask
             if (numberOfRows < 1 || numberOfColumns < 1 || gridSize.x < 0 || gridSize.z < 0) return null;
             Grid grid = new Grid(gridStartPosition, gridSize, numberOfRows, numberOfColumns);
             //calculated constants
-            float cellWidth = gridSize.x / numberOfColumns;
-            float cellLength = gridSize.z / numberOfRows;
-            grid.CELL_SIZE = new Vector3(cellWidth, 0, cellLength);
+            grid.cellWidth = gridSize.x / numberOfColumns;
+            grid.cellLength = gridSize.z / numberOfRows;
+            grid.CELL_SIZE = new Vector3(grid.cellWidth, 0, grid.cellLength);
             //construct the grid
             //filling CellObjects
             CellObject tempObj;
@@ -49,8 +52,8 @@ namespace GridMask
             {
                 for (j = 0; j < numberOfColumns; j++)
                 {
-                    ix = gridStartPosition.x + (i * cellWidth);
-                    jz = gridStartPosition.z + (j * cellLength);
+                    ix = gridStartPosition.x + (i * grid.cellWidth);
+                    jz = gridStartPosition.z + (j * grid.cellLength);
                     tempObj = new CellObject(new Vector3(ix, 0, jz), grid.CELL_SIZE);
                     grid.CELL_OBJECTS[i,j] = tempObj;
                 }
@@ -94,18 +97,45 @@ namespace GridMask
             return subgrid;
         }
 
+        public CellObject GetCellObjectByStartPosition(Vector3 startPosition)
+        {
+            int x = (int)((startPosition.x - GRID_POSITION_START.x) / this.cellWidth);
+            int z = (int)((startPosition.z - GRID_POSITION_START.z) / this.cellLength);
+            if (x >= this.ROW_LEN || z >= this.COLUMN_LEN) return null;
+            return this.CELL_OBJECTS[x, z];
+        }
+
         public bool Put(int x, int z, PropObject prop, float offsetX = 0, float offsetY = 0, float offsetZ = 0, int align = 0)
         {
-            if (x >= this.ROW_LEN || z >= this.COLUMN_LEN)
-            {
+            if (x >= this.ROW_LEN || z >= this.COLUMN_LEN || !this.CELL_OBJECTS[x,z].IsEmpty)
                 return false;
-            }
             CONTENT[x, z] = prop;
             this.CELL_OBJECTS[x, z].Put(prop, new Vector3(offsetX, offsetY, offsetZ), align);
 
             //for objects spanning across multiple cells, we have to mark all those cells  as 'filled'
             //method : start from object "position" and loop all cells towards top left and bottom right
             //marking all cells as 'filled' with 'prop'
+            if (!prop.MULTI_SPAN_IF_POSSIBLE) return true;
+            Vector3 startPos = prop.BoundsMin;
+            Vector3 endPos = prop.BoundsMax;
+            int ixS = (int)((startPos.x - GRID_POSITION_START.x) / this.cellWidth);
+            int jzS = (int)((startPos.z - GRID_POSITION_START.z) / this.cellLength);
+            int ixE = (int)((endPos.x - GRID_POSITION_START.x) / this.cellWidth);
+            int jzE = (int)((endPos.z - GRID_POSITION_START.z) / this.cellLength);
+            ixS = (ixS < 0) ? 0 : ixS;
+            jzS = (jzS < 0) ? 0 : jzS;
+            ixE = (ixE >= this.ROW_LEN) ? this.ROW_LEN - 1 : ixE;
+            jzE = (jzE >= this.ROW_LEN) ? this.ROW_LEN - 1 : jzE;
+            Debug.Log("====================");
+            Debug.Log(((startPos.x - GRID_POSITION_START.x) / this.cellWidth) + " --- " + (int)Mathf.Floor((startPos.z - GRID_POSITION_START.z) / this.cellLength));
+            Debug.Log(((endPos.x - GRID_POSITION_START.x) / this.cellWidth) + " --- " + ((endPos.z - GRID_POSITION_START.z) / this.cellLength));
+            for (; ixS <= ixE; ixS++)
+            {
+                for(; jzS <= jzE; jzS++)
+                {
+                    this.CELL_OBJECTS[ixS, jzS].Mark(prop);
+                }
+            }
             return true;
         }
 
