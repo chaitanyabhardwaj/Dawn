@@ -7,4 +7,3 @@ realistic environment
 virtual environment into real world
 - Tested on Windows 10, MacOS v11.0, Android 10 and iOS 14.0
 
-**(In development)**
