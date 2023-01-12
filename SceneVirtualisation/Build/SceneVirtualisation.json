@@ -1,0 +1,16 @@
+{
+"companyName": "Chaitanya Bhardwaj",
+"productName": "SceneVirtualization",
+"productVersion": "1.0",
+"dataUrl": "SceneVirtualisation.data.unityweb",
+"wasmCodeUrl": "SceneVirtualisation.wasm.code.unityweb",
+"wasmFrameworkUrl": "SceneVirtualisation.wasm.framework.unityweb",
+"graphicsAPI": ["WebGL 2.0","WebGL 1.0"],
+"webglContextAttributes": {"preserveDrawingBuffer": false},
+"splashScreenStyle": "Dark",
+"backgroundColor": "#808080",
+"cacheControl": {"default": "must-revalidate"},
+"developmentBuild": false,
+"multithreading": false,
+"unityVersion": "2019.4.13f1"
+}
